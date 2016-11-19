@@ -1,0 +1,20 @@
+{
+  "name": "mereconfig",
+  "keywords": "config configuration http crypto encrypted",
+  "description": "Configuration management for the ESP8266, supporting HTTP updating and public key encryption.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/derpston/mereconfig.git"
+  },
+  "version": "0.1.0",
+  "authors": [
+    { "name": "Derp Ston", "url": "http://github.com/derpston" }
+  ],
+  "exclude": [
+  ],
+  "frameworks": "arduino",
+  "platforms": "espressif8266",
+  "dependencies": {
+    "name": "tweetnacl"
+  }
+}
