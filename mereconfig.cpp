@@ -246,8 +246,10 @@ bool MereConfig::update()
                     }
 
                } else {
+                    char firstbytes[16] = {0};
+                    strncpy(firstbytes, (const char*) config, sizeof(firstbytes));
                     snprintf(update_result, sizeof(update_result),
-                        "%s: config header incorrect", update_result);
+                        "%s: config header incorrect: %s", update_result, firstbytes);
                }
             }
 
