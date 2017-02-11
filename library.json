@@ -14,7 +14,9 @@
   ],
   "frameworks": "arduino",
   "platforms": "espressif8266",
-  "dependencies": {
-    "name": "tweetnacl"
+  "dependencies": [
+    { "name": "tweetnacl" },
+    { "name": "base64" }
+    ]
   }
 }

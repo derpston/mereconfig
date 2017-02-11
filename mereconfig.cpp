@@ -1,25 +1,45 @@
 #include <mereconfig.h>
+#include "base64.hpp"
 
 MereConfig::MereConfig(const char * config_url)
 {
+    _init(config_url, true);
+}
+
+MereConfig::MereConfig(const char * config_url, bool load_stored_config)
+{
+    _init(config_url, load_stored_config);
+}
+
+void MereConfig::_init(const char * config_url, bool load_stored_config)
+{
     _config_url = config_url;
-    _load();
+    if(load_stored_config)
+        _load();
 }
 
 unsigned char* MereConfig::_decrypt(unsigned char * message, int length)
 {
-    // Copy the nonce out of the encrypted message.
+    // Remove the Base64 armor.
+    unsigned char *unpacked = (unsigned char *) malloc(length);
+    memset(unpacked, 0, length);
+
+    unsigned int len = decode_base64(message, unpacked);
+    
     unsigned char nonce[crypto_box_NONCEBYTES];
-    memcpy(nonce, message, crypto_box_NONCEBYTES);
+    unsigned int unpacked_size = len;
 
-    // Copy the length and ciphertext out of the message.
-    long esize = length - crypto_box_NONCEBYTES + crypto_box_BOXZEROBYTES;
-    unsigned char *ciphertext = (unsigned char*) malloc(esize);
+    // Copy the nonce out of the encrypted message.
+    memcpy(nonce, unpacked, crypto_box_NONCEBYTES);
+
+    long esize = (unpacked_size - crypto_box_NONCEBYTES) + crypto_box_BOXZEROBYTES;
+    unsigned char *ciphertext = (unsigned char *) malloc(esize);
     memset(ciphertext, 0, crypto_box_BOXZEROBYTES);
-    memcpy(ciphertext + crypto_box_BOXZEROBYTES, message + crypto_box_NONCEBYTES, length - crypto_box_NONCEBYTES);
+    memcpy(ciphertext + crypto_box_BOXZEROBYTES, unpacked + crypto_box_NONCEBYTES, unpacked_size - crypto_box_NONCEBYTES);
+    free(unpacked);
 
-    // Allocate some space for the plaintext and try to decrypt.
-    unsigned char *plaintext = (unsigned char *) calloc(esize, sizeof(unsigned char));
+    unsigned char *plaintext = (unsigned char *) calloc(esize + 1, sizeof(unsigned char));
+    memset(plaintext, 0, esize + 1);
     int retval = crypto_box_open(plaintext, 
         ciphertext,
         esize,
@@ -175,6 +195,7 @@ void MereConfig::_free()
         // Erase the hash.
         memset(hash, 0, sizeof(hash));
 
+        _kv_root = NULL;
         has_config = false;
     }
 }
@@ -214,7 +235,6 @@ bool MereConfig::update()
 
             if(NULL != config)
             {
-                //return false;
                 if(_is_valid_config(config))
                 {
                     // Hash new config to see if it has changed.

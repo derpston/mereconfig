@@ -28,7 +28,8 @@ class MereConfig
         uint16_t keys = 0;
         char update_result[512] = {0};
 
-        MereConfig(const char * config_url);
+        MereConfig(const char *);
+        MereConfig(const char *, bool);
 
         bool update();
         void set_keys(unsigned char *, unsigned char *);
@@ -38,8 +39,9 @@ class MereConfig
         uint32_t get_int(const char* key, uint32_t def);
         double get_float(const char* key, double def);
     private:
+        void _init(const char *, bool);
         const char *_config_url;
-        kv *_kv_root;
+        kv *_kv_root = NULL;
         int _last_decrypt_error = -2; // hmm
         unsigned char *_my_secret_key, *_their_public_key;
         char *_raw_config;
