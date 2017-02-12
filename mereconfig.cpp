@@ -273,6 +273,9 @@ bool MereConfig::update()
                     snprintf(update_result, sizeof(update_result),
                         "%s: config header incorrect: %s", update_result, firstbytes);
                }
+            } else {
+                sprintf(update_result, "%s: Decryption failed: %d",
+                    update_result, _last_decrypt_error);
             }
 
             // If we had an encrypted config, it was malloc()ed inside
