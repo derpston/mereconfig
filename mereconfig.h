@@ -4,6 +4,7 @@
 #include <strings.h>
 #include <ESP8266HTTPClient.h>
 #include <tweetnacl.h>
+#include <StreamString.h>
 
 #define MERECONFIG_MAX_SIZE 256
 
@@ -57,4 +58,3 @@ class MereConfig
         bool _is_valid_config(unsigned char *);
         unsigned char *_maybe_decrypt_config(unsigned char *, unsigned int);
 };
-

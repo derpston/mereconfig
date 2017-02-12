@@ -1,5 +1,4 @@
 #include <mereconfig.h>
-#include "base64.hpp"
 
 MereConfig::MereConfig(const char * config_url)
 {
@@ -20,23 +19,14 @@ void MereConfig::_init(const char * config_url, bool load_stored_config)
 
 unsigned char* MereConfig::_decrypt(unsigned char * message, int length)
 {
-    // Remove the Base64 armor.
-    unsigned char *unpacked = (unsigned char *) malloc(length);
-    memset(unpacked, 0, length);
-
-    unsigned int len = decode_base64(message, unpacked);
-    
-    unsigned char nonce[crypto_box_NONCEBYTES];
-    unsigned int unpacked_size = len;
-
     // Copy the nonce out of the encrypted message.
-    memcpy(nonce, unpacked, crypto_box_NONCEBYTES);
+    unsigned char nonce[crypto_box_NONCEBYTES];
+    memcpy(nonce, message, crypto_box_NONCEBYTES);
 
-    long esize = (unpacked_size - crypto_box_NONCEBYTES) + crypto_box_BOXZEROBYTES;
+    long esize = (length - crypto_box_NONCEBYTES) + crypto_box_BOXZEROBYTES;
     unsigned char *ciphertext = (unsigned char *) malloc(esize);
     memset(ciphertext, 0, crypto_box_BOXZEROBYTES);
-    memcpy(ciphertext + crypto_box_BOXZEROBYTES, unpacked + crypto_box_NONCEBYTES, unpacked_size - crypto_box_NONCEBYTES);
-    free(unpacked);
+    memcpy(ciphertext + crypto_box_BOXZEROBYTES, message + crypto_box_NONCEBYTES, length - crypto_box_NONCEBYTES);
 
     unsigned char *plaintext = (unsigned char *) calloc(esize + 1, sizeof(unsigned char));
     memset(plaintext, 0, esize + 1);
@@ -224,14 +214,26 @@ bool MereConfig::update()
     http.begin(_config_url);
     bool retval = false;
 
-	int status_code = http.GET();
+    int status_code = http.GET();
     sprintf(update_result, "HTTP %d", status_code);
- 	if(status_code > 0)
-	{
+    if(status_code > 0)
+    {
         if(status_code == HTTP_CODE_OK)
         {
-            String payload = http.getString();
-            unsigned char * config = _maybe_decrypt_config((unsigned char *)payload.c_str(), payload.length());
+            // This is sort of hacky, but seems to be required because
+            // simply using http.getString() truncates the data at the
+            // first null byte, despite claiming to have the correct
+            // length. This method does not stop at the first null, but
+            // it looks weird.
+            StreamString ss;
+            http.writeToStream(&ss);
+            unsigned char *rawbuf = (unsigned char *) malloc(ss.length());
+            for(unsigned int i=0; i<ss.length(); i++)
+                rawbuf[i] = ss[i];
+
+            unsigned char * config = _maybe_decrypt_config(rawbuf, ss.length());
+
+            free(rawbuf);
 
             if(NULL != config)
             {
