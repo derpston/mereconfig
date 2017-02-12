@@ -359,3 +359,8 @@ double MereConfig::get_float(const char *key, double def)
     return atof(val);
 }
 
+MereConfig::~MereConfig() 
+{
+    _free();
+};
+

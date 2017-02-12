@@ -39,6 +39,7 @@ class MereConfig
         bool    get_bool(const char* key, bool def);
         uint32_t get_int(const char* key, uint32_t def);
         double get_float(const char* key, double def);
+        ~MereConfig();
     private:
         void _init(const char *, bool);
         const char *_config_url;
