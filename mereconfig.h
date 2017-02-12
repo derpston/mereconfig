@@ -6,7 +6,7 @@
 #include <tweetnacl.h>
 #include <StreamString.h>
 
-#define MERECONFIG_MAX_SIZE 256
+#define MERECONFIG_MAX_SIZE 1024
 
 #define MAGIC_HEADER "# MereConfig header - do not edit #"
 #define MAGIC_HEADER_LEN 35 
